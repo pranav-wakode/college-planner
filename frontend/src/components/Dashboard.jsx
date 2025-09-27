@@ -1,28 +1,23 @@
+// src/components/Dashboard.jsx
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Calendar, BookOpen, Grid3X3, Clock, GraduationCap, ExternalLink, Smartphone } from 'lucide-react';
+import { Calendar, BookOpen, Grid3X3, Clock, GraduationCap, ExternalLink, Smartphone, BookCopy } from 'lucide-react';
 import TimetableGrid from './TimetableGrid';
 import SyllabusManager from './SyllabusManager';
+import SubjectsManager from './SubjectsManager';
 import TimetableWidget from './TimetableWidget';
 import { mockTimeSlots } from '../mock';
-import { loadTimetableFromStorage, saveTimetableToStorage } from '../utils/storage';
-
-const saveTimeSlotsToStorage = async (slots) => {
-  try {
-    localStorage.setItem('timetable_slots', JSON.stringify(slots));
-  } catch (error) { console.error("Failed to save time slots:", error); }
-};
-
-const loadTimeSlotsFromStorage = async () => {
-  try {
-    const savedSlots = localStorage.getItem('timetable_slots');
-    return savedSlots ? JSON.parse(savedSlots) : null;
-  } catch (error) { console.error("Failed to load time slots:", error); return null; }
-};
+import {
+  loadTimetableFromStorage, saveTimetableToStorage,
+  loadTimeSlotsFromStorage, saveTimeSlotsToStorage,
+  loadSyllabusFromStorage, saveSyllabusToStorage,
+  loadSubjectsFromStorage, saveSubjectsToStorage
+} from '../utils/storage';
 
 const Dashboard = () => {
   const [selectedSubject, setSelectedSubject] = useState(null);
@@ -30,9 +25,11 @@ const Dashboard = () => {
   const [showWidgetPreview, setShowWidgetPreview] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // --- FIX: Both timetable grid data and time slots are now managed here ---
+  // All major app state is now managed here
   const [timeSlots, setTimeSlots] = useState(mockTimeSlots);
   const [timetable, setTimetable] = useState({});
+  const [subjects, setSubjects] = useState([]);
+  const [syllabus, setSyllabus] = useState({});
 
   useEffect(() => {
     const timerId = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -42,30 +39,33 @@ const Dashboard = () => {
 
       const savedTimetable = await loadTimetableFromStorage();
       if (savedTimetable) setTimetable(savedTimetable);
+
+      const savedSubjects = await loadSubjectsFromStorage();
+      if (savedSubjects) setSubjects(savedSubjects);
+
+      const savedSyllabus = await loadSyllabusFromStorage();
+      if (savedSyllabus) setSyllabus(savedSyllabus);
     };
     loadData();
     return () => clearInterval(timerId);
   }, []);
 
-  // --- FIX: Calculate stats dynamically whenever the timetable changes ---
   const stats = useMemo(() => {
-    const subjects = new Set();
     let classCount = 0;
     if (timetable) {
       Object.values(timetable).forEach(daySchedule => {
         Object.values(daySchedule).forEach(subject => {
           if (subject && subject !== 'Free Period' && subject !== 'Lunch Break') {
-            subjects.add(subject);
             classCount++;
           }
         });
       });
     }
     return {
-      activeSubjectsCount: subjects.size,
+      activeSubjectsCount: subjects.length,
       weeklyClassesCount: classCount
     };
-  }, [timetable]);
+  }, [timetable, subjects]);
 
   const handleSubjectClick = (subject) => setSelectedSubject(subject);
   const openWidgetInNewWindow = () => window.open('/widget', 'timetableWidget', 'width=400,height=600,scrollbars=yes,resizable=yes');
@@ -78,6 +78,50 @@ const Dashboard = () => {
   const handleTimetableChange = async (newTimetable) => {
     setTimetable(newTimetable);
     await saveTimetableToStorage(newTimetable);
+  };
+
+  const handleSyllabusChange = async (newSyllabus) => {
+    setSyllabus(newSyllabus);
+    await saveSyllabusToStorage(newSyllabus);
+  };
+
+  const handleAddSubject = async (subjectName) => {
+    if (subjects.find(s => s.toLowerCase() === subjectName.toLowerCase())) {
+        alert('Subject already exists!');
+        return;
+    }
+    const newSubjects = [...subjects, subjectName].sort();
+    setSubjects(newSubjects);
+    await saveSubjectsToStorage(newSubjects);
+
+    // Also initialize an empty syllabus for the new subject
+    if (!syllabus[subjectName]) {
+        const newSyllabus = { ...syllabus, [subjectName]: [] };
+        handleSyllabusChange(newSyllabus);
+    }
+  };
+
+  const handleDeleteSubject = async (subjectToDelete) => {
+    // 1. Delete from subjects list
+    const newSubjects = subjects.filter(s => s !== subjectToDelete);
+    setSubjects(newSubjects);
+    await saveSubjectsToStorage(newSubjects);
+
+    // 2. Delete from timetable by replacing with "Free Period"
+    const newTimetable = JSON.parse(JSON.stringify(timetable));
+    Object.keys(newTimetable).forEach(day => {
+        Object.keys(newTimetable[day]).forEach(timeSlot => {
+            if (newTimetable[day][timeSlot] === subjectToDelete) {
+                newTimetable[day][timeSlot] = 'Free Period';
+            }
+        });
+    });
+    handleTimetableChange(newTimetable);
+
+    // 3. Delete from syllabus
+    const newSyllabus = { ...syllabus };
+    delete newSyllabus[subjectToDelete];
+    handleSyllabusChange(newSyllabus);
   };
 
   const getCurrentDaySchedule = () => {
@@ -96,11 +140,15 @@ const Dashboard = () => {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-grid lg:grid-cols-2"><TabsTrigger value="timetable" className="flex items-center gap-2"><Grid3X3 className="w-4 h-4" />Timetable</TabsTrigger><TabsTrigger value="syllabus" className="flex items-center gap-2"><BookOpen className="w-4 h-4" />Syllabus</TabsTrigger></TabsList>
+          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid lg:grid-cols-3">
+            <TabsTrigger value="timetable" className="flex items-center gap-2"><Grid3X3 className="w-4 h-4" />Timetable</TabsTrigger>
+            <TabsTrigger value="syllabus" className="flex items-center gap-2"><BookOpen className="w-4 h-4" />Syllabus</TabsTrigger>
+            <TabsTrigger value="subjects" className="flex items-center gap-2"><BookCopy className="w-4 h-4" />Subjects</TabsTrigger>
+          </TabsList>
+
           <TabsContent value="timetable" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white"><CardContent className="p-6 flex items-center justify-between"><div><p className="text-blue-100">Current Day</p><p className="text-2xl font-bold">{currentDay}</p></div><Calendar className="w-8 h-8 text-blue-200" /></CardContent></Card>
-              {/* --- FIX: Displaying dynamic stats --- */}
               <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white"><CardContent className="p-6 flex items-center justify-between"><div><p className="text-purple-100">Active Subjects</p><p className="text-2xl font-bold">{stats.activeSubjectsCount}</p></div><BookOpen className="w-8 h-8 text-purple-200" /></CardContent></Card>
               <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white"><CardContent className="p-6 flex items-center justify-between"><div><p className="text-green-100">Weekly Classes</p><p className="text-2xl font-bold">{stats.weeklyClassesCount}</p></div><Clock className="w-8 h-8 text-green-200" /></CardContent></Card>
             </div>
@@ -111,14 +159,30 @@ const Dashboard = () => {
               timetable={timetable}
               onTimeSlotsChange={handleTimeSlotsChange}
               onTimetableChange={handleTimetableChange}
+              subjects={subjects}
             />
 
             <Card className="bg-indigo-50 border-indigo-200"><CardContent className="p-6"><div className="flex items-center justify-between mb-4"><h3 className="font-semibold text-indigo-800 flex items-center gap-2"><Smartphone className="w-5 h-5" />Widget Access</h3><Button size="sm" onClick={openWidgetInNewWindow} className="bg-indigo-600 hover:bg-indigo-700"><ExternalLink className="w-4 h-4 mr-1" />Open in New Window</Button></div><p className="text-sm text-indigo-700">• Use the widget for a compact view of your daily schedule.</p></CardContent></Card>
           </TabsContent>
-          <TabsContent value="syllabus" className="space-y-6"><SyllabusManager /></TabsContent>
+
+          <TabsContent value="syllabus" className="space-y-6">
+            <SyllabusManager
+              subjects={subjects}
+              syllabusData={syllabus}
+              onSyllabusChange={handleSyllabusChange}
+            />
+          </TabsContent>
+
+          <TabsContent value="subjects" className="space-y-6">
+            <SubjectsManager
+              subjects={subjects}
+              onAddSubject={handleAddSubject}
+              onDeleteSubject={handleDeleteSubject}
+            />
+          </TabsContent>
         </Tabs>
 
-        {selectedSubject && <SyllabusManager selectedSubject={selectedSubject} onClose={() => setSelectedSubject(null)} />}
+        {selectedSubject && <SyllabusManager selectedSubject={selectedSubject} onClose={() => setSelectedSubject(null)} subjects={subjects} syllabusData={syllabus} onSyllabusChange={handleSyllabusChange}/>}
 
         <Dialog open={showWidgetPreview} onOpenChange={setShowWidgetPreview}>
           <DialogContent className="sm:max-w-lg"><DialogHeader><DialogTitle>Widget Preview</DialogTitle></DialogHeader><div className="p-4 bg-gray-50 rounded-lg"><TimetableWidget timeSlots={timeSlots} key={`${currentTime.getMinutes()}-${JSON.stringify(timeSlots)}`}/></div></DialogContent>
