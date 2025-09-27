@@ -5,13 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4146aa99-d601-452f-8bfa-7bb769bdc0e6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/App.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/Dashboard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Dashboard.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/SyllabusManager.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/SyllabusManager.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/TimetableGrid.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/TimetableGrid.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/TimetableWidget.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/TimetableWidget.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/mock.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/mock.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/utils/storage.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/utils/storage.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -39,6 +37,7 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "cf.first.check.clang-format": "false",

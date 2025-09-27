@@ -5,7 +5,7 @@ import Dashboard from "./components/Dashboard";
 import WidgetPage from "./components/WidgetPage";
 import { Toaster } from "./components/ui/toaster";
 import { initializeCapacitor } from "./utils/capacitor";
-import { initializeAppData } from "./utils/storage";
+//import { initializeAppData } from "./utils/storage";
 
 function App() {
   useEffect(() => {

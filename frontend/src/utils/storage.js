@@ -1,137 +1,40 @@
-import { Preferences } from '@capacitor/preferences';
-// Make sure to import mock data used for defaults
-import { mockTimetable, mockSyllabus, mockTimeSlots } from '../mock';
+// src/utils/storage.js
 
-// Check if we're running in a Capacitor environment
-const isNativeApp = () => {
-  return window?.Capacitor?.isNativePlatform?.() || false;
-};
+import { mockSyllabus, mockTimeSlots, mockTimetable } from '../mock';
 
-// Native storage functions
-const setNativeStorage = async (key, value) => {
+// General purpose getters and setters
+const saveToStorage = (key, value) => {
   try {
-    await Preferences.set({
-      key,
-      value: JSON.stringify(value),
-    });
-  } catch (error) {
-    console.error('Error saving to native storage:', error);
-    // Fallback to localStorage
     localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.error(`Failed to save ${key}:`, error);
   }
 };
 
-const getNativeStorage = async (key, defaultValue) => {
+const loadFromStorage = (key, defaultValue) => {
   try {
-    const { value } = await Preferences.get({ key });
-    return value ? JSON.parse(value) : defaultValue;
-  } catch (error) {
-    console.error('Error reading from native storage:', error);
-    // Fallback to localStorage
     const stored = localStorage.getItem(key);
     return stored ? JSON.parse(stored) : defaultValue;
+  } catch (error) {
+    console.error(`Failed to load ${key}:`, error);
+    return defaultValue;
   }
 };
 
-// Web storage functions (fallback)
-const setWebStorage = (key, value) => {
-  localStorage.setItem(key, JSON.stringify(value));
-};
+// --- App Data Functions ---
 
-const getWebStorage = (key, defaultValue) => {
-  const stored = localStorage.getItem(key);
-  return stored ? JSON.parse(stored) : defaultValue;
-};
+export const saveTimetableToStorage = (timetable) => saveToStorage('timetable_data', timetable);
+export const loadTimetableFromStorage = () => loadFromStorage('timetable_data', mockTimetable);
 
-// --- Timetable Storage ---
-export const saveTimetableToStorage = async (timetable) => {
-  if (isNativeApp()) {
-    await setNativeStorage('collegeTimetable', timetable);
-  } else {
-    setWebStorage('collegeTimetable', timetable);
-  }
-};
+export const saveSyllabusToStorage = (syllabus) => saveToStorage('syllabus_data', syllabus);
+export const loadSyllabusFromStorage = () => loadFromStorage('syllabus_data', mockSyllabus);
 
-export const loadTimetableFromStorage = async () => {
-  if (isNativeApp()) {
-    return await getNativeStorage('collegeTimetable', mockTimetable);
-  } else {
-    return getWebStorage('collegeTimetable', mockTimetable);
-  }
-};
+export const saveSubjectsToStorage = (subjects) => saveToStorage('subjects_list', subjects);
+export const loadSubjectsFromStorage = () => loadFromStorage('subjects_list', []);
 
-// --- Syllabus Storage ---
-export const saveSyllabusToStorage = async (syllabus) => {
-  if (isNativeApp()) {
-    await setNativeStorage('collegeSyllabus', syllabus);
-  } else {
-    setWebStorage('collegeSyllabus', syllabus);
-  }
-};
+export const saveTimeSlotsToStorage = (slots) => saveToStorage('timetable_slots', slots);
+export const loadTimeSlotsFromStorage = () => loadFromStorage('timetable_slots', mockTimeSlots);
 
-export const loadSyllabusFromStorage = async () => {
-  if (isNativeApp()) {
-    return await getNativeStorage('collegeSyllabus', mockSyllabus);
-  } else {
-    return getWebStorage('collegeSyllabus', mockSyllabus);
-  }
-};
-
-// --- Subjects Storage (New) ---
-export const saveSubjectsToStorage = async (subjects) => {
-  if (isNativeApp()) {
-    await setNativeStorage('subjects_list', subjects);
-  } else {
-    setWebStorage('subjects_list', subjects);
-  }
-};
-
-export const loadSubjectsFromStorage = async () => {
-  // Default to an empty array as subjects are user-defined
-  if (isNativeApp()) {
-    return await getNativeStorage('subjects_list', []);
-  } else {
-    return getWebStorage('subjects_list', []);
-  }
-};
-
-// --- Time Slots Storage (New) ---
-export const saveTimeSlotsToStorage = async (slots) => {
-  if (isNativeApp()) {
-    await setNativeStorage('timetable_slots', slots);
-  } else {
-    setWebStorage('timetable_slots', slots);
-  }
-};
-
-export const loadTimeSlotsFromStorage = async () => {
-  if (isNativeApp()) {
-    return await getNativeStorage('timetable_slots', mockTimeSlots);
-  } else {
-    return getWebStorage('timetable_slots', mockTimeSlots);
-  }
-};
-
-
-// Initialize app data
-export const initializeAppData = async () => {
-  try {
-    // Check if data exists, if not, create initial data
-    const timetable = await loadTimetableFromStorage();
-    const syllabus = await loadSyllabusFromStorage();
-
-    if (!timetable || Object.keys(timetable).length === 0) {
-      await saveTimetableToStorage(mockTimetable);
-    }
-
-    if (!syllabus || Object.keys(syllabus).length === 0) {
-      await saveSyllabusToStorage(mockSyllabus);
-    }
-
-    return { timetable, syllabus };
-  } catch (error)
- {
-    console.error('Error initializing app data:', error);
-    return { timetable: mockTimetable, syllabus: mockSyllabus };
-  }
-};
+// New functions for Hall Numbers
+export const saveHallNumbersToStorage = (hallNumbers) => saveToStorage('hall_numbers', hallNumbers);
+export const loadHallNumbersFromStorage = () => loadFromStorage('hall_numbers', {});

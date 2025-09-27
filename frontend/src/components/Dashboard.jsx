@@ -1,8 +1,6 @@
-// src/components/Dashboard.jsx
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Card, CardContent } from './ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
@@ -11,12 +9,14 @@ import TimetableGrid from './TimetableGrid';
 import SyllabusManager from './SyllabusManager';
 import SubjectsManager from './SubjectsManager';
 import TimetableWidget from './TimetableWidget';
+import DataSyncManager from './DataSyncManager';
 import { mockTimeSlots } from '../mock';
 import {
   loadTimetableFromStorage, saveTimetableToStorage,
   loadTimeSlotsFromStorage, saveTimeSlotsToStorage,
   loadSyllabusFromStorage, saveSyllabusToStorage,
-  loadSubjectsFromStorage, saveSubjectsToStorage
+  loadSubjectsFromStorage, saveSubjectsToStorage,
+  loadHallNumbersFromStorage, saveHallNumbersToStorage
 } from '../utils/storage';
 
 const Dashboard = () => {
@@ -25,26 +25,21 @@ const Dashboard = () => {
   const [showWidgetPreview, setShowWidgetPreview] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // All major app state is now managed here
-  const [timeSlots, setTimeSlots] = useState(mockTimeSlots);
+  const [timeSlots, setTimeSlots] = useState([]);
   const [timetable, setTimetable] = useState({});
   const [subjects, setSubjects] = useState([]);
   const [syllabus, setSyllabus] = useState({});
+  const [hallNumbers, setHallNumbers] = useState({});
 
   useEffect(() => {
     const timerId = setInterval(() => setCurrentTime(new Date()), 60000);
     const loadData = async () => {
-      const savedTimeSlots = await loadTimeSlotsFromStorage();
-      if (savedTimeSlots) setTimeSlots(savedTimeSlots);
-
-      const savedTimetable = await loadTimetableFromStorage();
-      if (savedTimetable) setTimetable(savedTimetable);
-
-      const savedSubjects = await loadSubjectsFromStorage();
-      if (savedSubjects) setSubjects(savedSubjects);
-
-      const savedSyllabus = await loadSyllabusFromStorage();
-      if (savedSyllabus) setSyllabus(savedSyllabus);
+      setTimeSlots(await loadTimeSlotsFromStorage());
+      // FIX: Corrected typo from loadTimetableFromstorage to loadTimetableFromStorage
+      setTimetable(await loadTimetableFromStorage());
+      setSubjects(await loadSubjectsFromStorage());
+      setSyllabus(await loadSyllabusFromStorage());
+      setHallNumbers(await loadHallNumbersFromStorage());
     };
     loadData();
     return () => clearInterval(timerId);
@@ -52,15 +47,13 @@ const Dashboard = () => {
 
   const stats = useMemo(() => {
     let classCount = 0;
-    if (timetable) {
-      Object.values(timetable).forEach(daySchedule => {
-        Object.values(daySchedule).forEach(subject => {
-          if (subject && subject !== 'Free Period' && subject !== 'Lunch Break') {
-            classCount++;
-          }
-        });
+    Object.values(timetable).forEach(daySchedule => {
+      Object.values(daySchedule).forEach(subject => {
+        if (subject && subject !== 'Free Period' && subject !== 'Lunch Break') {
+          classCount++;
+        }
       });
-    }
+    });
     return {
       activeSubjectsCount: subjects.length,
       weeklyClassesCount: classCount
@@ -74,54 +67,65 @@ const Dashboard = () => {
     setTimeSlots(newTimeSlots);
     await saveTimeSlotsToStorage(newTimeSlots);
   };
-
   const handleTimetableChange = async (newTimetable) => {
     setTimetable(newTimetable);
     await saveTimetableToStorage(newTimetable);
   };
-
   const handleSyllabusChange = async (newSyllabus) => {
     setSyllabus(newSyllabus);
     await saveSyllabusToStorage(newSyllabus);
   };
+  const handleSubjectsChange = async (newSubjects) => {
+    setSubjects(newSubjects);
+    await saveSubjectsToStorage(newSubjects);
+  };
+  const handleHallNumbersChange = async (newHallNumbers) => {
+    setHallNumbers(newHallNumbers);
+    await saveHallNumbersToStorage(newHallNumbers);
+  };
 
   const handleAddSubject = async (subjectName) => {
     if (subjects.find(s => s.toLowerCase() === subjectName.toLowerCase())) {
-        alert('Subject already exists!');
-        return;
+      alert('Subject already exists!');
+      return;
     }
     const newSubjects = [...subjects, subjectName].sort();
-    setSubjects(newSubjects);
-    await saveSubjectsToStorage(newSubjects);
-
-    // Also initialize an empty syllabus for the new subject
+    await handleSubjectsChange(newSubjects);
     if (!syllabus[subjectName]) {
-        const newSyllabus = { ...syllabus, [subjectName]: [] };
-        handleSyllabusChange(newSyllabus);
+      const newSyllabus = { ...syllabus, [subjectName]: [] };
+      await handleSyllabusChange(newSyllabus);
     }
   };
 
   const handleDeleteSubject = async (subjectToDelete) => {
-    // 1. Delete from subjects list
     const newSubjects = subjects.filter(s => s !== subjectToDelete);
-    setSubjects(newSubjects);
-    await saveSubjectsToStorage(newSubjects);
+    await handleSubjectsChange(newSubjects);
 
-    // 2. Delete from timetable by replacing with "Free Period"
     const newTimetable = JSON.parse(JSON.stringify(timetable));
     Object.keys(newTimetable).forEach(day => {
-        Object.keys(newTimetable[day]).forEach(timeSlot => {
-            if (newTimetable[day][timeSlot] === subjectToDelete) {
-                newTimetable[day][timeSlot] = 'Free Period';
-            }
-        });
+      Object.keys(newTimetable[day]).forEach(timeSlot => {
+        if (newTimetable[day][timeSlot] === subjectToDelete) {
+          newTimetable[day][timeSlot] = 'Free Period';
+        }
+      });
     });
-    handleTimetableChange(newTimetable);
+    await handleTimetableChange(newTimetable);
 
-    // 3. Delete from syllabus
     const newSyllabus = { ...syllabus };
     delete newSyllabus[subjectToDelete];
-    handleSyllabusChange(newSyllabus);
+    await handleSyllabusChange(newSyllabus);
+
+    const newHallNumbers = { ...hallNumbers };
+    delete newHallNumbers[subjectToDelete];
+    await handleHallNumbersChange(newHallNumbers);
+  };
+
+  const handleImportData = async (data) => {
+    await handleSubjectsChange(data.subjects || []);
+    await handleTimetableChange(data.timetable || {});
+    await handleSyllabusChange(data.syllabus || {});
+    await handleTimeSlotsChange(data.timeSlots || mockTimeSlots);
+    await handleHallNumbersChange(data.hallNumbers || {});
   };
 
   const getCurrentDaySchedule = () => {
@@ -163,6 +167,11 @@ const Dashboard = () => {
             />
 
             <Card className="bg-indigo-50 border-indigo-200"><CardContent className="p-6"><div className="flex items-center justify-between mb-4"><h3 className="font-semibold text-indigo-800 flex items-center gap-2"><Smartphone className="w-5 h-5" />Widget Access</h3><Button size="sm" onClick={openWidgetInNewWindow} className="bg-indigo-600 hover:bg-indigo-700"><ExternalLink className="w-4 h-4 mr-1" />Open in New Window</Button></div><p className="text-sm text-indigo-700">• Use the widget for a compact view of your daily schedule.</p></CardContent></Card>
+
+            <DataSyncManager
+              data={{ subjects, timetable, syllabus, timeSlots, hallNumbers }}
+              onImport={handleImportData}
+            />
           </TabsContent>
 
           <TabsContent value="syllabus" className="space-y-6">
@@ -182,10 +191,22 @@ const Dashboard = () => {
           </TabsContent>
         </Tabs>
 
-        {selectedSubject && <SyllabusManager selectedSubject={selectedSubject} onClose={() => setSelectedSubject(null)} subjects={subjects} syllabusData={syllabus} onSyllabusChange={handleSyllabusChange}/>}
+        {selectedSubject && <SyllabusManager selectedSubject={selectedSubject} onClose={() => setSelectedSubject(null)} subjects={subjects} syllabusData={syllabus} onSyllabusChange={handleSyllabusChange} />}
 
         <Dialog open={showWidgetPreview} onOpenChange={setShowWidgetPreview}>
-          <DialogContent className="sm:max-w-lg"><DialogHeader><DialogTitle>Widget Preview</DialogTitle></DialogHeader><div className="p-4 bg-gray-50 rounded-lg"><TimetableWidget timeSlots={timeSlots} key={`${currentTime.getMinutes()}-${JSON.stringify(timeSlots)}`}/></div></DialogContent>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader><DialogTitle>Widget Preview</DialogTitle></DialogHeader>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <TimetableWidget
+                timeSlots={timeSlots}
+                timetable={timetable}
+                syllabus={syllabus}
+                hallNumbers={hallNumbers}
+                onHallNumbersChange={handleHallNumbersChange}
+                key={JSON.stringify({ timeSlots, timetable, hallNumbers, syllabus })}
+              />
+            </div>
+          </DialogContent>
         </Dialog>
       </main>
 
