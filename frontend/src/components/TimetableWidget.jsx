@@ -1,3 +1,5 @@
+// src/components/TimetableWidget.jsx
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -42,11 +44,13 @@ const TimetableWidget = ({
   onHallNumbersChange
 }) => {
   const [localData, setLocalData] = useState({ timetable, syllabus, hallNumbers, timeSlots });
-  const [selectedSubject, setSelectedSubject] = useState(null);
-  const [currentHallNo, setCurrentHallNo] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Effect for standalone mode OR when props update
+  // State for the editing dialog
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingContext, setEditingContext] = useState(null); // Will hold { day, timeSlot, subject }
+  const [currentHallNo, setCurrentHallNo] = useState('');
+
   useEffect(() => {
     const loadData = async () => {
       if (standalone) {
@@ -57,7 +61,6 @@ const TimetableWidget = ({
             hallNumbers: await loadHallNumbersFromStorage(),
         });
       } else {
-        // When used as a preview, always sync with props from Dashboard
         setLocalData({ timetable, syllabus, hallNumbers, timeSlots });
       }
     };
@@ -66,8 +69,24 @@ const TimetableWidget = ({
     return () => clearInterval(timer);
   }, [standalone, timetable, syllabus, hallNumbers, timeSlots]);
 
+  const handleSlotClick = (day, timeSlot, subject) => {
+    if (subject && subject !== 'Lunch Break' && subject !== 'Free Period') {
+      setEditingContext({ day, timeSlot, subject });
+      setCurrentHallNo(localData.hallNumbers[day]?.[timeSlot] || '');
+      setIsDialogOpen(true);
+    }
+  };
+
   const handleHallNumberUpdate = async () => {
-    const newHallNumbers = { ...localData.hallNumbers, [selectedSubject]: currentHallNo };
+    if (!editingContext) return;
+    const { day, timeSlot } = editingContext;
+
+    const newHallNumbers = JSON.parse(JSON.stringify(localData.hallNumbers));
+    if (!newHallNumbers[day]) {
+      newHallNumbers[day] = {};
+    }
+    newHallNumbers[day][timeSlot] = currentHallNo;
+
     if (onHallNumbersChange) {
       onHallNumbersChange(newHallNumbers);
     } else {
@@ -77,8 +96,14 @@ const TimetableWidget = ({
   };
 
   const handleHallNumberDelete = async () => {
-    const newHallNumbers = { ...localData.hallNumbers };
-    delete newHallNumbers[selectedSubject];
+    if (!editingContext) return;
+    const { day, timeSlot } = editingContext;
+
+    const newHallNumbers = JSON.parse(JSON.stringify(localData.hallNumbers));
+    if (newHallNumbers[day]?.[timeSlot]) {
+      delete newHallNumbers[day][timeSlot];
+    }
+
     if (onHallNumbersChange) {
       onHallNumbersChange(newHallNumbers);
     } else {
@@ -88,17 +113,8 @@ const TimetableWidget = ({
     setCurrentHallNo('');
   };
 
-  const handleSubjectClick = (subject) => {
-    if (subject && subject !== 'Lunch Break' && subject !== 'Free Period') {
-      setSelectedSubject(subject);
-      setCurrentHallNo(localData.hallNumbers[subject] || '');
-    }
-  };
-
-  // FIX: This function now returns the correct 3-letter day abbreviation.
   const getCurrentDay = () => {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    // In preview, always show Monday if today is Sunday
     const dayIndex = new Date().getDay();
     if (!standalone && dayIndex === 0) return 'Mon';
     return days[dayIndex];
@@ -144,10 +160,10 @@ const TimetableWidget = ({
         <CardContent className="space-y-2">
           {localData.timeSlots.map(timeSlot => {
             const subject = todaySchedule[timeSlot] || 'Free Period';
-            const hallNo = localData.hallNumbers[subject];
+            const hallNo = localData.hallNumbers[currentDay]?.[timeSlot];
             const isCurrentSlot = timeSlot === currentTimeSlot;
             return (
-              <div key={timeSlot} className={getSubjectStyle(subject, isCurrentSlot)} onClick={() => handleSubjectClick(subject)}>
+              <div key={timeSlot} className={getSubjectStyle(subject, isCurrentSlot)} onClick={() => handleSlotClick(currentDay, timeSlot, subject)}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-xs font-medium text-gray-500 w-24 text-right flex-shrink-0">{timeSlot}</span>
@@ -162,17 +178,15 @@ const TimetableWidget = ({
         </CardContent>
       </Card>
 
-      {selectedSubject && (
-        <Dialog open={!!selectedSubject} onOpenChange={() => setSelectedSubject(null)}>
-            {/* The Dialog content remains the same as your provided version */}
-            <DialogContent className="sm:max-w-md max-h-[80vh] flex flex-col">
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="sm:max-w-md max-h-[80vh] flex flex-col">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-lg">
-                <BookOpen className="w-5 h-5 text-blue-600" /> {selectedSubject}
+                <BookOpen className="w-5 h-5 text-blue-600" /> {editingContext?.subject}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-2 py-2">
-              <label className="text-sm font-medium flex items-center gap-2 text-gray-700"><Home className="w-4 h-4" /> Hall / Room No.</label>
+              <label className="text-sm font-medium flex items-center gap-2 text-gray-700"><Home className="w-4 h-4" /> Hall / Room No. for this slot</label>
               <div className="flex items-center gap-2">
                 <Input
                   placeholder="e.g., 101 or Lab A"
@@ -184,11 +198,11 @@ const TimetableWidget = ({
               </div>
             </div>
             <div className="border-t pt-4 mt-2 flex-grow overflow-hidden">
-              <h3 className="font-medium text-gray-800 mb-2">Syllabus</h3>
+              <h3 className="font-medium text-gray-800 mb-2">Syllabus for {editingContext?.subject}</h3>
               <ScrollArea className="h-full pr-4 -mr-4">
                 <div className="space-y-3">
-                  {(localData.syllabus[selectedSubject]?.length > 0) ? (
-                    localData.syllabus[selectedSubject].map((topic, index) => (
+                  {(localData.syllabus[editingContext?.subject]?.length > 0) ? (
+                    localData.syllabus[editingContext?.subject].map((topic, index) => (
                       <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
                         <div className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium">{index + 1}</div>
                         <p className="text-sm text-gray-700 leading-relaxed">{topic}</p>
@@ -205,7 +219,6 @@ const TimetableWidget = ({
             </div>
           </DialogContent>
         </Dialog>
-      )}
     </div>
   );
 };

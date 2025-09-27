@@ -1,3 +1,5 @@
+// src/components/Dashboard.jsx
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -35,7 +37,6 @@ const Dashboard = () => {
     const timerId = setInterval(() => setCurrentTime(new Date()), 60000);
     const loadData = async () => {
       setTimeSlots(await loadTimeSlotsFromStorage());
-      // FIX: Corrected typo from loadTimetableFromstorage to loadTimetableFromStorage
       setTimetable(await loadTimetableFromStorage());
       setSubjects(await loadSubjectsFromStorage());
       setSyllabus(await loadSyllabusFromStorage());
@@ -102,22 +103,26 @@ const Dashboard = () => {
     await handleSubjectsChange(newSubjects);
 
     const newTimetable = JSON.parse(JSON.stringify(timetable));
+    const newHallNumbers = JSON.parse(JSON.stringify(hallNumbers));
+
+    // Remove subject from timetable and its corresponding hall number
     Object.keys(newTimetable).forEach(day => {
       Object.keys(newTimetable[day]).forEach(timeSlot => {
         if (newTimetable[day][timeSlot] === subjectToDelete) {
           newTimetable[day][timeSlot] = 'Free Period';
+          // Also delete the hall number for that specific slot
+          if (newHallNumbers[day] && newHallNumbers[day][timeSlot]) {
+            delete newHallNumbers[day][timeSlot];
+          }
         }
       });
     });
     await handleTimetableChange(newTimetable);
+    await handleHallNumbersChange(newHallNumbers);
 
     const newSyllabus = { ...syllabus };
     delete newSyllabus[subjectToDelete];
     await handleSyllabusChange(newSyllabus);
-
-    const newHallNumbers = { ...hallNumbers };
-    delete newHallNumbers[subjectToDelete];
-    await handleHallNumbersChange(newHallNumbers);
   };
 
   const handleImportData = async (data) => {
@@ -139,7 +144,28 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4"><div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"><div className="flex items-center space-x-3"><div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 rounded-xl"><GraduationCap className="w-8 h-8 text-white" /></div><div><h1 className="text-2xl sm:text-3xl font-bold text-gray-900">College Planner</h1><p className="text-gray-600">Timetable & Syllabus Manager</p></div></div><div className="flex items-center space-x-2 w-full sm:w-auto"><Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 py-2 px-3"><Clock className="w-4 h-4 mr-2" />{isToday ? 'Today' : 'Demo'}: {currentDay}</Badge><Button variant="outline" size="sm" onClick={() => setShowWidgetPreview(true)} className="flex-1 sm:flex-none"><Smartphone className="w-4 h-4 mr-2" />Preview</Button></div></div></div>
+        {/* FIX: Increased top padding from py-4 to pt-12 pb-4 for status bar clearance */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center space-x-3">
+                    <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 rounded-xl">
+                        <GraduationCap className="w-8 h-8 text-white" />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">College Planner</h1>
+                        <p className="text-gray-600">Timetable & Syllabus Manager</p>
+                    </div>
+                </div>
+                <div className="flex items-center space-x-2 w-full sm:w-auto">
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 py-2 px-3">
+                        <Clock className="w-4 h-4 mr-2" />{isToday ? 'Today' : 'Demo'}: {currentDay}
+                    </Badge>
+                    <Button variant="outline" size="sm" onClick={() => setShowWidgetPreview(true)} className="flex-1 sm:flex-none">
+                        <Smartphone className="w-4 h-4 mr-2" />Preview
+                    </Button>
+                </div>
+            </div>
+        </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
