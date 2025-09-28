@@ -8,12 +8,11 @@ import { Upload, Download, Settings } from 'lucide-react';
 // Import Capacitor plugins
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
-import { Share } from '@capacitor/share'; // Import the new Share plugin
+import { Share } from '@capacitor/share';
 
 const DataSyncManager = ({ data, onImport }) => {
   const fileInputRef = useRef(null);
 
-  // Export logic for web browsers (remains the same)
   const handleWebExport = () => {
     try {
       const jsonString = JSON.stringify(data, null, 2);
@@ -32,32 +31,33 @@ const DataSyncManager = ({ data, onImport }) => {
     }
   };
 
-  // New export logic for native devices using the Share plugin
   const handleNativeExport = async () => {
     const fileName = `college-planner-backup-${new Date().toISOString().split('T')[0]}.json`;
     try {
-      // 1. Write the file to the app's temporary cache directory
       const result = await Filesystem.writeFile({
         path: fileName,
         data: JSON.stringify(data, null, 2),
-        directory: Directory.Cache, // Use the app's private cache
+        directory: Directory.Cache,
         encoding: Encoding.UTF8,
       });
 
-      // 2. Use the Share plugin to open the native share dialog
       await Share.share({
         title: 'College Planner Backup',
         text: 'Here is your app data backup file.',
-        url: result.uri, // The URI of the file we just wrote
+        url: result.uri,
         dialogTitle: 'Share or Save Backup',
       });
 
     } catch (error) {
-      // If the user cancels the share dialog, it might throw an "AbortError", which we can ignore.
-      if (error.name === 'AbortError') {
-        console.log('Share dialog was cancelled by the user.');
-        return;
+      // --- FIX: This block is now updated ---
+      // We check if the error message is the specific "Share canceled" one.
+      // If it is, we do nothing. It's not a real error.
+      if (error && error.message && error.message.includes('Share canceled')) {
+        console.log('Share dialog was dismissed by the user.');
+        return; // Exit the function gracefully
       }
+
+      // For any other, unexpected errors, we still show an alert.
       console.error("Failed to export data for native:", error);
       alert(`An error occurred while exporting your data: ${error.message}`);
     }
@@ -71,7 +71,6 @@ const DataSyncManager = ({ data, onImport }) => {
     }
   };
 
-  // Import logic (remains the same)
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
     if (file && file.type === "application/json") {
