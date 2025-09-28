@@ -6,7 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="4146aa99-d601-452f-8bfa-7bb769bdc0e6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/DataSyncManager.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/DataSyncManager.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Dashboard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Dashboard.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/TimetableWidget.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/TimetableWidget.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

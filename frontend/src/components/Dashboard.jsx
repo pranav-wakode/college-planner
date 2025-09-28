@@ -222,7 +222,7 @@ const Dashboard = () => {
         <Dialog open={showWidgetPreview} onOpenChange={setShowWidgetPreview}>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader><DialogTitle>Widget Preview</DialogTitle></DialogHeader>
-            <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="p-0 bg-gray-50 rounded-lg">
               <TimetableWidget
                 timeSlots={timeSlots}
                 timetable={timetable}

@@ -15,7 +15,6 @@ import {
   saveHallNumbersToStorage
 } from '../utils/storage';
 
-// FIX: This function is now more robust and correctly handles AM/PM modifiers.
 const parseTime = (timeStr) => {
   const [time, modifier] = timeStr.trim().split(' ');
   let [hours, minutes] = time.split(':').map(Number);
@@ -26,14 +25,13 @@ const parseTime = (timeStr) => {
       hours += 12;
     }
     const isAM = modifier.toLowerCase().startsWith('a');
-    if (isAM && hours === 12) { // Handle midnight case (12 AM is hour 0)
+    if (isAM && hours === 12) {
       hours = 0;
     }
   }
   return hours + (minutes || 0) / 60;
 };
 
-// FIX: This function no longer strips the AM/PM modifier, allowing parseTime to work correctly.
 const parseTimeRange = (rangeStr) => {
   const parts = rangeStr.split('-');
   if (parts.length !== 2) return { start: 0, end: 0 };
@@ -84,11 +82,9 @@ const TimetableWidget = ({
     }
   };
 
-  // FIX: This function now manages dialog state and keyboard behavior.
   const handleDialogChange = (open) => {
     setIsDialogOpen(open);
     if (open) {
-      // When the dialog opens, briefly focus the content to prevent the keyboard.
       setTimeout(() => {
         dialogContentRef.current?.focus();
       }, 50);
@@ -164,28 +160,28 @@ const TimetableWidget = ({
             <Badge variant="secondary" className="text-xs">{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Badge>
           </div>
         </CardHeader>
-        <CardContent className="space-y-2 pt-2">
+
+        {/* FIX: Added max-height and overflow-y-auto to this container */}
+        <CardContent className="space-y-2 pt-2 max-h-[65vh] overflow-y-auto pr-2">
           {localData.timeSlots.map(timeSlot => {
             const subject = todaySchedule[timeSlot] || 'Free Period';
             const hallNo = localData.hallNumbers[currentDay]?.[timeSlot];
             const isCurrentSlot = timeSlot === currentTimeSlot;
 
             return (
-              // FIX: New layout combines time and subject into one box.
               <div
                 key={timeSlot}
                 onClick={() => handleSlotClick(currentDay, timeSlot, subject)}
                 className={`relative p-3 rounded-lg transition-all duration-200 cursor-pointer ${getSubjectStyle(subject)} ${isCurrentSlot ? 'ring-2 ring-green-500' : ''}`}
               >
                 <div className="flex items-center justify-between">
-                  {/* FIX: Font size is now a consistent text-sm */}
                   <span className={`font-semibold text-sm truncate pr-4 ${isCurrentSlot ? 'font-bold' : ''}`}>{subject}</span>
                   {isCurrentSlot && <Badge variant="default" className="text-xs bg-green-600 flex-shrink-0">NOW</Badge>}
                 </div>
                 <p className="text-xs text-gray-500 mt-1">{timeSlot}</p>
 
                 {hallNo && (
-                  <span className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-blue-600 text-white text-xs font-bold flex items-center justify-center rounded-full ring-2 ring-white">
+                  <span className="absolute top-1 right-1 transform translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-blue-600 text-white text-xs font-bold flex items-center justify-center rounded-full ring-2 ring-white">
                     {hallNo}
                   </span>
                 )}
@@ -196,7 +192,6 @@ const TimetableWidget = ({
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
-          {/* FIX: Added ref and tabIndex to DialogContent to allow programmatic focus. */}
           <DialogContent ref={dialogContentRef} tabIndex={-1} className="sm:max-w-md h-[90vh] sm:h-[80vh] flex flex-col focus:outline-none">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-lg">
@@ -215,7 +210,6 @@ const TimetableWidget = ({
                 <Button size="icon" variant="destructive" onClick={handleHallNumberDelete}><Trash2 className="w-4 h-4" /></Button>
               </div>
             </div>
-            {/* FIX: Added flex-grow and overflow-hidden to make the scroll area work correctly. */}
             <div className="border-t pt-4 mt-2 flex-grow overflow-hidden">
               <h3 className="font-medium text-gray-800 mb-2">Syllabus for {editingContext?.subject}</h3>
               <ScrollArea className="h-full pr-4 -mr-4">
