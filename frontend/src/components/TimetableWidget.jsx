@@ -175,13 +175,20 @@ const TimetableWidget = ({
                 className={`relative p-3 rounded-lg transition-all duration-200 cursor-pointer ${getSubjectStyle(subject)} ${isCurrentSlot ? 'ring-2 ring-green-500' : ''}`}
               >
                 <div className="flex items-center justify-between">
-                  <span className={`font-semibold text-sm truncate pr-4 ${isCurrentSlot ? 'font-bold' : ''}`}>{subject}</span>
-                  {isCurrentSlot && <Badge variant="default" className="text-xs bg-green-600 flex-shrink-0">NOW</Badge>}
+                  <span className={`font-semibold text-sm truncate pr-10 ${isCurrentSlot ? 'font-bold' : ''}`}>{subject}</span>
+                  {isCurrentSlot && (
+                    <Badge
+                      variant="default"
+                      className="absolute top-8 right-6 text-xs bg-green-600"
+                    >
+                      NOW
+                    </Badge>
+                  )}
                 </div>
                 <p className="text-xs text-gray-500 mt-1">{timeSlot}</p>
 
                 {hallNo && (
-                  <span className="absolute top-1 right-1 transform translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-blue-600 text-white text-xs font-bold flex items-center justify-center rounded-full ring-2 ring-white">
+                  <span className="absolute top-3 right-3 transform translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-blue-600 text-white text-xs font-bold flex items-center justify-center rounded-full ring-2 ring-white">
                     {hallNo}
                   </span>
                 )}
@@ -210,9 +217,9 @@ const TimetableWidget = ({
                 <Button size="icon" variant="destructive" onClick={handleHallNumberDelete}><Trash2 className="w-4 h-4" /></Button>
               </div>
             </div>
-            <div className="border-t pt-4 mt-2 flex-grow overflow-hidden">
-              <h3 className="font-medium text-gray-800 mb-2">Syllabus for {editingContext?.subject}</h3>
-              <ScrollArea className="h-full pr-4 -mr-4">
+            <div className="border-t pt-4 mt-2 flex flex-col flex-grow overflow-hidden">
+              <h3 className="font-medium text-gray-800 mb-2 flex-shrink-0">Syllabus for {editingContext?.subject}</h3>
+              <div className="flex-grow overflow-y-auto pr-2">
                 <div className="space-y-3">
                   {(localData.syllabus[editingContext?.subject]?.length > 0) ? (
                     localData.syllabus[editingContext?.subject].map((topic, index) => (
@@ -228,7 +235,7 @@ const TimetableWidget = ({
                     </div>
                   )}
                 </div>
-              </ScrollArea>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
