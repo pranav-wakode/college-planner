@@ -1,0 +1,28 @@
+# Node.js / React
+node_modules/
+/frontend/build
+.env
+.env*.local
+yarn-error.log
+npm-debug.log*
+
+# Python
+__pycache__/
+*.pyc
+.venv
+venv/
+env/
+
+# Capacitor / Android
+/frontend/android/app/build/
+/frontend/android/capacitor-cordova-android-plugins/
+/frontend/android/.gradle/
+/frontend/android/.idea/
+/frontend/college-planner.apk
+
+# IDE & OS specific
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
