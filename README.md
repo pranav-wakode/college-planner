@@ -7,7 +7,7 @@ College Planner is a complete Android application built to help students effortl
 - **Today View:** A dashboard that shows the current day, total active subjects, and the number of classes for the week.
 - **Weekly Timetable Grid:** A clear, editable grid displaying your schedule from Monday to Saturday.
 - **Customizable Timeslots:** Easily edit the start and end times for your lecture slots to match your college's schedule.
-- **Syllabus Integration:** Tap on any subject directly from the timetable to view its syllabus, add notes, or update the hall number for that specific class.
+- **Syllabus Integration:** Tap on any subject directly from the timetable to view its syllabus, add, update or delete syllabus for that specific class.
 
 <p align="center">
   <img src="./screenshots/college_planner.jpg" width="200" alt="Initial Prompt Screen">
@@ -68,45 +68,45 @@ Follow these steps to build and run the project on your local machine.
 ### Build Steps
 1. **Clone the repository:**
 
-'''bash
+```bash
 git clone [https://github.com/wakodepranav2005-git/college_planner.git](https://github.com/wakodepranav2005-git/college_planner.git)
 cd college_planner/frontend
-'''
+```
 
 2. **Install dependencies:**
 
-'''bash
+```bash
 yarn install
-'''
+```
 
 3. **Build the React app:**
 
-'''bash
+```bash
 yarn build
-'''
+```
 
 4. **Sync with Capacitor:**
 
-'''bash
+```bash
 npx cap sync android
-'''
+```
 
 5. **Open in Android Studio:**
 
-'''bash
+```bash
 npx cap open android
-'''
+```
 
 - Once open, allow Gradle to sync. You can then run the app on an emulator or a connected physical device.
 
 6. **Build APK from Command Line:**
 
-'''bash
+```bash
 # Navigate to the android directory
 cd android
 # Build the debug APK
 ./gradlew assembleDebug
-'''
+```
 
 - The APK will be located at frontend/android/app/build/outputs/apk/debug/app-debug.apk.
 
