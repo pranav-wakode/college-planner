@@ -69,7 +69,7 @@ Follow these steps to build and run the project on your local machine.
 1. **Clone the repository:**
 
 ```bash
-git clone [https://github.com/wakodepranav2005-git/college_planner.git](https://github.com/wakodepranav2005-git/college_planner.git)
+git clone https://github.com/wakodepranav2005-git/college_planner.git
 cd college_planner/frontend
 ```
 
