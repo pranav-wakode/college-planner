@@ -10,8 +10,8 @@ College Planner is a complete Android application built to help students effortl
 - **Syllabus Integration:** Tap on any subject directly from the timetable to view its syllabus, add, update or delete syllabus for that specific class.
 
 <p align="center">
-  <img src="./screenshots/college_planner.jpg" width="200" alt="Initial Prompt Screen">
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="./screenshots/weekly_timetable.jpg" width="200" alt="Enhanced Prompt Screen">
+  <img src="./screenshots/college_planner.jpg" width="200" alt="Timetable Section">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="./screenshots/weekly_timetable.jpg" width="200" alt="Weekly timetable">
 </p>
 
 ### 📚 Syllabus Section
@@ -20,7 +20,7 @@ College Planner is a complete Android application built to help students effortl
 - **Expandable Views:** Each subject is presented in a clean, expandable accordion view to avoid clutter.
 
 <p align="center">
-  <img src="./screenshots/syllabus.jpg" width="200" alt="Initial Prompt Screen">
+  <img src="./screenshots/syllabus.jpg" width="200" alt="Syllabus section">
 </p>
 
 ### 📝 Subjects Section
@@ -28,7 +28,7 @@ College Planner is a complete Android application built to help students effortl
 - **Simple Interface:** A straightforward list allows for quick additions and deletions.
 
 <p align="center">
-  <img src="./screenshots/subjects.jpg" width="200" alt="Initial Prompt Screen">
+  <img src="./screenshots/subjects.jpg" width="200" alt="Subject section">
 </p>
 
 ### 🔄 Data Backup and Sync
@@ -36,7 +36,7 @@ College Planner is a complete Android application built to help students effortl
 - **Import Data:** Restore your data from an exported file in seconds. Perfect for new device setups or after a reset.
 
 <p align="center">
-  <img src="./screenshots/export_import.jpg" width="200" alt="Initial Prompt Screen">
+  <img src="./screenshots/export_import.jpg" width="200" alt="Export/Import options">
 </p>
 
 ## 📱 Android Home Screen Widget
@@ -47,8 +47,8 @@ The widget brings your daily schedule directly to your home screen for quick gla
 - **Instant Syllabus Access:** Tap on any subject in the widget to open the app and view its details, including syllabus points and the option to edit the hall number.
 
 <p align="center">
-  <img src="./screenshots/preview.jpg" width="200" alt="Initial Prompt Screen">
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="./screenshots/syllabus_points.jpg" width="200" alt="Enhanced Prompt Screen">
+  <img src="./screenshots/preview.jpg" width="200" alt="Widget Preview">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="./screenshots/syllabus_points.jpg" width="200" alt="Syllabus points in widget">
 </p>
 
 ## 🛠️ Tech Stack
@@ -69,8 +69,8 @@ Follow these steps to build and run the project on your local machine.
 1. **Clone the repository:**
 
 ```bash
-git clone https://github.com/wakodepranav2005-git/college_planner.git
-cd college_planner/frontend
+https://github.com/pranav-wakode/college-planner.git
+cd college-planner/frontend
 ```
 
 2. **Install dependencies:**
